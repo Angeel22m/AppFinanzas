@@ -70,7 +70,7 @@ export function Login() {
     }
   }
 
-  const handleSendMagicLink = async () => {
+  const handleSendOtp = async () => {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Por favor ingresa un email válido para enviarte el código')
       return
@@ -82,7 +82,7 @@ export function Login() {
       const { error: err } = await supabase.auth.signInWithOtp({ email })
       if (err) throw err
       setMessage('Hemos enviado un código de 6 dígitos a tu correo.')
-      setOtpType('magiclink')
+      setOtpType('email')
       setShowOtpInput(true)
     } catch (err) {
       setError(err.message || 'Error al enviar el código')
@@ -319,7 +319,7 @@ export function Login() {
               {!isSignUp && (
                 <button
                   type="button"
-                  onClick={handleSendMagicLink}
+                  onClick={handleSendOtp}
                   disabled={loading}
                   className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
                 >
