@@ -7,18 +7,20 @@ import { DashboardPage } from './pages/DashboardPage'
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/finanzas-app">
+      <Router basename="/AppFinanzas">
         <Routes>
           <Route path="/login" element={<AuthPage />} />
+          
           <Route
-            path="/dashboard"
+            path="/"
             element={
               <ProtectedRoute>
                 <DashboardPage />
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
