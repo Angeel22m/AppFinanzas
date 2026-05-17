@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, KeyRound, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 
 export function Login() {
   const navigate = useNavigate()
@@ -13,6 +14,13 @@ export function Login() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  // OTP States
+  const [showOtpInput, setShowOtpInput] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [otpType, setOtpType] = useState('signup')
+  const [message, setMessage] = useState(null)
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -39,6 +47,7 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setMessage(null)
 
     if (!validateForm()) return
 
@@ -47,17 +56,59 @@ export function Login() {
       if (isSignUp) {
         await signUp(email, password)
         setError(null)
-        setEmail('')
-        setPassword('')
-        setConfirmPassword('')
-        setIsSignUp(false)
-        alert('Cuenta creada exitosamente. Por favor inicia sesión.')
+        setMessage('Hemos enviado un código de 6 dígitos a tu correo. Por favor, ingrésalo para verificar tu cuenta.')
+        setOtpType('signup')
+        setShowOtpInput(true)
       } else {
         await signIn(email, password)
         navigate('/dashboard')
       }
     } catch (err) {
       setError(err.message || 'Error al procesar tu solicitud')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSendMagicLink = async () => {
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Por favor ingresa un email válido para enviarte el código')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const { error: err } = await supabase.auth.signInWithOtp({ email })
+      if (err) throw err
+      setMessage('Hemos enviado un código de 6 dígitos a tu correo.')
+      setOtpType('magiclink')
+      setShowOtpInput(true)
+    } catch (err) {
+      setError(err.message || 'Error al enviar el código')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    if (otp.length < 6) {
+      setError('El código debe tener 6 dígitos')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const { error: err } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: otpType
+      })
+      if (err) throw err
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message || 'Código inválido o expirado. Solicita uno nuevo.')
     } finally {
       setLoading(false)
     }
@@ -89,14 +140,23 @@ export function Login() {
 
           {/* Error Banner */}
           {displayError && (
-            <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg flex items-start gap-3 animate-shake">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-red-400 text-sm font-medium">{displayError}</p>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-500/50 rounded-lg flex items-start gap-3 animate-shake">
+              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-700 dark:text-red-400 text-sm font-medium">{displayError}</p>
+            </div>
+          )}
+
+          {/* Success/Message Banner */}
+          {message && (
+            <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-500/50 rounded-lg flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <p className="text-emerald-800 dark:text-emerald-300 text-sm font-medium">{message}</p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {!showOtpInput ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Input */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -187,24 +247,87 @@ export function Login() {
               )}
             </button>
           </form>
-
-          {/* Toggle Auth Mode */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-500 dark:text-slate-400 text-sm transition-colors duration-300">
-              {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <KeyRound className="w-5 h-5 text-emerald-400 group-focus-within:text-emerald-300 transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Código de 6 dígitos"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-slate-700/30 border border-gray-200 dark:border-slate-600/50 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-700/50 transition-all text-center tracking-widest text-lg font-mono"
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
               <button
+                type="submit"
+                disabled={loading || otp.length < 6}
+                className="w-full mt-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Verificando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Verificar código</span>
+                    <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
                 onClick={() => {
-                  setIsSignUp(!isSignUp)
+                  setShowOtpInput(false)
+                  setMessage(null)
                   setError(null)
-                  setConfirmPassword('')
+                  setOtp('')
                 }}
                 disabled={loading}
-                className="text-blue-600 dark:text-emerald-400 hover:text-blue-500 dark:hover:text-emerald-300 font-semibold transition-colors disabled:opacity-50"
+                className="w-full py-2 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors text-sm font-medium"
               >
-                {isSignUp ? 'Inicia sesión' : 'Regístrate'}
+                Volver
               </button>
-            </p>
-          </div>
+            </form>
+          )}
+
+          {/* Toggle Auth Mode */}
+          {!showOtpInput && (
+            <div className="mt-6 space-y-4 text-center">
+              <p className="text-gray-500 dark:text-slate-400 text-sm transition-colors duration-300">
+                {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
+                <button
+                  onClick={() => {
+                    setIsSignUp(!isSignUp)
+                    setError(null)
+                    setMessage(null)
+                    setConfirmPassword('')
+                  }}
+                  disabled={loading}
+                  className="text-blue-600 dark:text-emerald-400 hover:text-blue-500 dark:hover:text-emerald-300 font-semibold transition-colors disabled:opacity-50"
+                >
+                  {isSignUp ? 'Inicia sesión' : 'Regístrate'}
+                </button>
+              </p>
+              
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={handleSendMagicLink}
+                  disabled={loading}
+                  className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+                >
+                  Ingresar con código por email
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Footer info */}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700/50 transition-colors duration-300">
