@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { TrendingUp, TrendingDown, Pencil, Trash2, X } from 'lucide-react'
+import { TrendingUp, TrendingDown, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export function ReporteMensual({ onSuccess }) {
   const { user } = useAuth()
@@ -17,17 +17,14 @@ export function ReporteMensual({ onSuccess }) {
   const [editForm, setEditForm] = useState({ monto: '', descripcion: '', categoria_id: '' })
   const [loading, setLoading] = useState(true)
   const [viewType, setViewType] = useState('pie')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [periodo, setPeriodo] = useState('mensual')
 
   useEffect(() => {
     const fetchTransacciones = async () => {
       setLoading(true)
 
-      const now = new Date()
-      const primerDia = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-      const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
-
-      // Obtener todas las transacciones del mes
-      const { data: transacciones, error } = await supabase
+      let query = supabase
         .from('transacciones')
         .select(`
           id,
@@ -43,9 +40,19 @@ export function ReporteMensual({ onSuccess }) {
           )
         `)
         .eq('user_id', user.id)
-        .gte('fecha', primerDia)
-        .lte('fecha', ultimoDia)
         .order('fecha', { ascending: false })
+
+      if (periodo === 'mensual') {
+        const primerDia = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString()
+        const ultimoDia = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59).toISOString()
+        query = query.gte('fecha', primerDia).lte('fecha', ultimoDia)
+      } else if (periodo === 'anual') {
+        const primerDia = new Date(currentDate.getFullYear(), 0, 1).toISOString()
+        const ultimoDia = new Date(currentDate.getFullYear(), 11, 31, 23, 59, 59).toISOString()
+        query = query.gte('fecha', primerDia).lte('fecha', ultimoDia)
+      }
+
+      const { data: transacciones, error } = await query
 
       if (error) {
         console.error('Error fetching transactions:', error)
@@ -93,7 +100,7 @@ export function ReporteMensual({ onSuccess }) {
     if (user) {
       fetchTransacciones()
     }
-  }, [user])
+  }, [user, currentDate, periodo])
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -160,14 +167,67 @@ export function ReporteMensual({ onSuccess }) {
     '#6366F1'
   ]
 
-  const mes = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+  let tituloReporte = ''
+  if (periodo === 'mensual') {
+    tituloReporte = `Reporte de ${currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`
+  } else if (periodo === 'anual') {
+    tituloReporte = `Reporte del ${currentDate.getFullYear()}`
+  } else {
+    tituloReporte = 'Reporte General'
+  }
+
+  const handlePrev = () => {
+    if (periodo === 'mensual') {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+    } else if (periodo === 'anual') {
+      setCurrentDate(prev => new Date(prev.getFullYear() - 1, prev.getMonth(), 1))
+    }
+  }
+
+  const handleNext = () => {
+    if (periodo === 'mensual') {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+    } else if (periodo === 'anual') {
+      setCurrentDate(prev => new Date(prev.getFullYear() + 1, prev.getMonth(), 1))
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 dark:border dark:border-slate-700 transition-colors duration-300">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 capitalize transition-colors duration-300">
-          Reporte de {mes}
-        </h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white capitalize transition-colors duration-300">
+            {tituloReporte}
+          </h2>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+            <select
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value)}
+              className="bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm transition-colors cursor-pointer"
+            >
+              <option value="mensual">Mensual</option>
+              <option value="anual">Anual</option>
+              <option value="general">General</option>
+            </select>
+
+            {periodo !== 'general' && (
+              <div className="flex items-center bg-gray-50 dark:bg-slate-700/50 rounded-lg p-1 border border-gray-200 dark:border-slate-600">
+                <button onClick={handlePrev} className="p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-600 text-gray-600 dark:text-slate-300 transition-colors shadow-sm" title="Anterior">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => setCurrentDate(new Date())} 
+                  className="px-3 py-1 text-sm font-medium hover:bg-white dark:hover:bg-slate-600 text-gray-600 dark:text-slate-300 transition-colors rounded-md"
+                >
+                  Hoy
+                </button>
+                <button onClick={handleNext} className="p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-600 text-gray-600 dark:text-slate-300 transition-colors shadow-sm" title="Siguiente">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Tarjetas de Resumen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -206,7 +266,7 @@ export function ReporteMensual({ onSuccess }) {
         </div>
 
         {/* Selector de Vista */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-slate-700 transition-colors duration-300">
+        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 dark:border-slate-700 transition-colors duration-300 pb-2">
           <button
             onClick={() => setViewType('pie')}
             className={`px-4 py-2 font-medium transition-colors ${viewType === 'pie' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'}`}
@@ -234,12 +294,18 @@ export function ReporteMensual({ onSuccess }) {
         </div>
 
         {/* Gráficos */}
-        {categoriaGastos.length === 0 ? (
+        {transaccionesRaw.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-slate-400 text-lg transition-colors duration-300">No hay gastos registrados este mes</p>
+            <p className="text-gray-500 dark:text-slate-400 text-lg transition-colors duration-300">No hay transacciones en este periodo</p>
           </div>
         ) : (
           <>
+            {(viewType === 'pie' || viewType === 'bar' || viewType === 'list') && categoriaGastos.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-slate-400 text-lg transition-colors duration-300">No hay gastos en este periodo</p>
+              </div>
+            ) : (
+              <>
             {viewType === 'pie' && (
               <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
@@ -307,6 +373,8 @@ export function ReporteMensual({ onSuccess }) {
                   )
                 })}
               </div>
+            )}
+              </>
             )}
 
             {viewType === 'historial' && (
