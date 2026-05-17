@@ -126,3 +126,30 @@ COMMENT ON TABLE categorias IS 'Categorías predefinidas para clasificar ingreso
 COMMENT ON TABLE transacciones IS 'Registro de todas las transacciones (ingresos y gastos) de los usuarios';
 COMMENT ON COLUMN transacciones.monto IS 'Cantidad en valor positivo (la clasificación ingreso/gasto viene de la categoría)';
 COMMENT ON COLUMN transacciones.user_id IS 'Referencia al usuario propietario de la transacción (RLS aplica)';
+
+
+-- 1. Recrear la vista de resumen mensual con el invoker seguro
+CREATE OR REPLACE VIEW transacciones_resumen_mensual 
+WITH (security_invoker = true) AS
+SELECT
+  DATE_TRUNC('month', t.fecha)::DATE as mes,
+  t.user_id,
+  c.nombre as categoria,
+  c.tipo,
+  SUM(t.monto) as total,
+  COUNT(*) as cantidad_transacciones
+FROM transacciones t
+JOIN categorias c ON t.categoria_id = c.id
+GROUP BY DATE_TRUNC('month', t.fecha), t.user_id, c.nombre, c.tipo;
+
+-- 2. Recrear la vista de saldo del usuario con el invoker seguro
+CREATE OR REPLACE VIEW saldo_usuario 
+WITH (security_invoker = true) AS
+SELECT
+  t.user_id,
+  COALESCE(SUM(CASE WHEN c.tipo = 'ingreso' THEN t.monto ELSE 0 END), 0) as total_ingresos,
+  COALESCE(SUM(CASE WHEN c.tipo = 'gasto' THEN t.monto ELSE 0 END), 0) as total_gastos,
+  COALESCE(SUM(CASE WHEN c.tipo = 'ingreso' THEN t.monto ELSE -t.monto END), 0) as saldo_actual
+FROM transacciones t
+JOIN categorias c ON t.categoria_id = c.id
+GROUP BY t.user_id;

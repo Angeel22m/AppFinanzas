@@ -66,7 +66,7 @@ export function Login() {
   const displayError = error || authError
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4 transition-colors duration-300">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -75,14 +75,14 @@ export function Login() {
 
       {/* Main card */}
       <div className="relative w-full max-w-md z-10">
-        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-8">
+        <div className="bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl border border-gray-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl p-8 transition-colors duration-300">
           {/* Header */}
           <div className="mb-8 text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg mb-4">
               <span className="text-white font-bold text-xl">₲</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">FinanzasApp</h1>
-            <p className="text-slate-400 text-sm">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 transition-colors duration-300">FinanzasApp</h1>
+            <p className="text-gray-500 dark:text-slate-400 text-sm transition-colors duration-300">
               {isSignUp ? 'Crea tu cuenta' : 'Bienvenido de vuelta'}
             </p>
           </div>
@@ -107,7 +107,7 @@ export function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
-                className="w-full pl-12 pr-4 py-3 bg-slate-700/30 border border-slate-600/50 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-emerald-500/50 focus:bg-slate-700/50 transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-slate-700/30 border border-gray-200 dark:border-slate-600/50 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-700/50 transition-all"
                 disabled={loading}
               />
             </div>
@@ -122,13 +122,13 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Contraseña"
-                className="w-full pl-12 pr-12 py-3 bg-slate-700/30 border border-slate-600/50 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-emerald-500/50 focus:bg-slate-700/50 transition-all"
+                className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-slate-700/30 border border-gray-200 dark:border-slate-600/50 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-700/50 transition-all"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-400 transition-colors"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-slate-400 hover:text-blue-500 dark:hover:text-emerald-400 transition-colors"
                 disabled={loading}
               >
                 {showPassword ? (
@@ -150,13 +150,13 @@ export function Login() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirma contraseña"
-                  className="w-full pl-12 pr-12 py-3 bg-slate-700/30 border border-slate-600/50 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-emerald-500/50 focus:bg-slate-700/50 transition-all"
+                  className="w-full pl-12 pr-12 py-3 bg-gray-50 dark:bg-slate-700/30 border border-gray-200 dark:border-slate-600/50 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-emerald-500/50 focus:bg-white dark:focus:bg-slate-700/50 transition-all"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-400 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 dark:text-slate-400 hover:text-blue-500 dark:hover:text-emerald-400 transition-colors"
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
@@ -190,7 +190,7 @@ export function Login() {
 
           {/* Toggle Auth Mode */}
           <div className="mt-6 text-center">
-            <p className="text-slate-400 text-sm">
+            <p className="text-gray-500 dark:text-slate-400 text-sm transition-colors duration-300">
               {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
               <button
                 onClick={() => {
@@ -199,7 +199,7 @@ export function Login() {
                   setConfirmPassword('')
                 }}
                 disabled={loading}
-                className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors disabled:opacity-50"
+                className="text-blue-600 dark:text-emerald-400 hover:text-blue-500 dark:hover:text-emerald-300 font-semibold transition-colors disabled:opacity-50"
               >
                 {isSignUp ? 'Inicia sesión' : 'Regístrate'}
               </button>
@@ -207,8 +207,8 @@ export function Login() {
           </div>
 
           {/* Footer info */}
-          <div className="mt-8 pt-6 border-t border-slate-700/50">
-            <p className="text-slate-500 text-xs text-center">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700/50 transition-colors duration-300">
+            <p className="text-gray-400 dark:text-slate-500 text-xs text-center transition-colors duration-300">
               Tu información está protegida con encriptación de nivel empresarial
             </p>
           </div>

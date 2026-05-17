@@ -92,7 +92,7 @@ export function ReporteMensual() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-gray-600">Cargando datos...</p>
+          <p className="text-gray-600 dark:text-slate-400 transition-colors duration-300">Cargando datos...</p>
         </div>
       </div>
     )
@@ -114,40 +114,40 @@ export function ReporteMensual() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 capitalize">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 dark:border dark:border-slate-700 transition-colors duration-300">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 capitalize transition-colors duration-300">
           Reporte de {mes}
         </h2>
 
         {/* Tarjetas de Resumen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-lg p-6 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 font-medium text-sm">Ingresos</p>
-                <p className="text-2xl font-bold text-green-700">${ingresos.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">${ingresos.toFixed(2)}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-lg p-6">
+          <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-6 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-600 font-medium text-sm">Gastos</p>
-                <p className="text-2xl font-bold text-red-700">${gastos.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-red-700 dark:text-red-400">${gastos.toFixed(2)}</p>
               </div>
               <TrendingDown className="w-8 h-8 text-red-500" />
             </div>
           </div>
 
-          <div className={`bg-gradient-to-br ${saldo >= 0 ? 'from-blue-50 to-cyan-50 border-blue-200' : 'from-orange-50 to-yellow-50 border-orange-200'} border rounded-lg p-6`}>
+          <div className={`bg-gradient-to-br ${saldo >= 0 ? 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800/50' : 'from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-orange-200 dark:border-orange-800/50'} border rounded-lg p-6 transition-colors duration-300`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`font-medium text-sm ${saldo >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                   Saldo Actual
                 </p>
-                <p className={`text-2xl font-bold ${saldo >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                <p className={`text-2xl font-bold ${saldo >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
                   ${saldo.toFixed(2)}
                 </p>
               </div>
@@ -156,22 +156,22 @@ export function ReporteMensual() {
         </div>
 
         {/* Selector de Vista */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200">
+        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-slate-700 transition-colors duration-300">
           <button
             onClick={() => setViewType('pie')}
-            className={`px-4 py-2 font-medium transition-colors ${viewType === 'pie' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'}`}
+            className={`px-4 py-2 font-medium transition-colors ${viewType === 'pie' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'}`}
           >
             Gráfico Circular
           </button>
           <button
             onClick={() => setViewType('bar')}
-            className={`px-4 py-2 font-medium transition-colors ${viewType === 'bar' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'}`}
+            className={`px-4 py-2 font-medium transition-colors ${viewType === 'bar' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'}`}
           >
             Gráfico de Barras
           </button>
           <button
             onClick={() => setViewType('list')}
-            className={`px-4 py-2 font-medium transition-colors ${viewType === 'list' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'}`}
+            className={`px-4 py-2 font-medium transition-colors ${viewType === 'list' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'}`}
           >
             Listado
           </button>
@@ -180,7 +180,7 @@ export function ReporteMensual() {
         {/* Gráficos */}
         {categoriaGastos.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No hay gastos registrados este mes</p>
+            <p className="text-gray-500 dark:text-slate-400 text-lg transition-colors duration-300">No hay gastos registrados este mes</p>
           </div>
         ) : (
           <>
@@ -227,16 +227,16 @@ export function ReporteMensual() {
                 {categoriaGastos.map((cat, idx) => {
                   const porcentaje = ((cat.total / gastos) * 100).toFixed(1)
                   return (
-                    <div key={cat.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div key={cat.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors duration-300">
                       <div
                         className="w-4 h-4 rounded-full flex-shrink-0"
                         style={{ backgroundColor: coloresCategoria[idx % coloresCategoria.length] }}
                       ></div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-800">
+                        <p className="font-medium text-gray-800 dark:text-white transition-colors duration-300">
                           {cat.icono} {cat.nombre}
                         </p>
-                        <div className="w-full bg-gray-300 rounded-full h-2 mt-1">
+                        <div className="w-full bg-gray-300 dark:bg-slate-600 rounded-full h-2 mt-1 transition-colors duration-300">
                           <div
                             className="bg-blue-600 h-2 rounded-full transition-all"
                             style={{ width: `${porcentaje}%` }}
@@ -244,8 +244,8 @@ export function ReporteMensual() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-gray-800">${cat.total.toFixed(2)}</p>
-                        <p className="text-sm text-gray-600">{porcentaje}%</p>
+                        <p className="font-bold text-gray-800 dark:text-white transition-colors duration-300">${cat.total.toFixed(2)}</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400 transition-colors duration-300">{porcentaje}%</p>
                       </div>
                     </div>
                   )

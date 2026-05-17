@@ -70,10 +70,10 @@ export function DashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Verificando sesión...</p>
+          <p className="text-gray-600 dark:text-slate-400 font-medium transition-colors duration-300">Verificando sesión...</p>
         </div>
       </div>
     )
@@ -84,20 +84,20 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
+      <header className="bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-50 border-b border-transparent dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg">
               <PiggyBank className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">FinanzasApp</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">FinanzasApp</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-gray-600">Sesión activa</p>
-              <p className="font-medium text-gray-800">{user?.email}</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400 transition-colors duration-300">Sesión activa</p>
+              <p className="font-medium text-gray-800 dark:text-slate-200 transition-colors duration-300">{user?.email}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -114,44 +114,44 @@ export function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tarjetas de Resumen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 dark:border dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Capital Actual</p>
-                <p className={`text-3xl font-bold ${metricas.saldo_actual >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <p className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1 transition-colors duration-300">Capital Actual</p>
+                <p className={`text-3xl font-bold transition-colors duration-300 ${metricas.saldo_actual >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
                   ${metricas.saldo_actual.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <PiggyBank className="w-8 h-8 text-blue-600" />
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg transition-colors duration-300">
+                <PiggyBank className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 dark:border dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total Ingresos</p>
-                <p className="text-3xl font-bold text-green-600">
+                <p className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1 transition-colors duration-300">Total Ingresos</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400 transition-colors duration-300">
                   ${metricas.total_ingresos.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <TrendingUp className="w-8 h-8 text-green-600" />
+              <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg transition-colors duration-300">
+                <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 dark:border dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total Gastos</p>
-                <p className="text-3xl font-bold text-red-600">
+                <p className="text-sm font-medium text-gray-600 dark:text-slate-400 mb-1 transition-colors duration-300">Total Gastos</p>
+                <p className="text-3xl font-bold text-red-600 dark:text-red-400 transition-colors duration-300">
                   ${metricas.total_gastos.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-red-100 p-3 rounded-lg">
-                <TrendingDown className="w-8 h-8 text-red-600" />
+              <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-lg transition-colors duration-300">
+                <TrendingDown className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </div>
