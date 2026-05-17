@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Pencil, Trash2, X } from 'lucide-react'
 
-export function ReporteMensual() {
+export function ReporteMensual({ onSuccess }) {
   const { user } = useAuth()
   const [saldo, setSaldo] = useState(0)
   const [ingresos, setIngresos] = useState(0)
   const [gastos, setGastos] = useState(0)
   const [categoriaGastos, setCategoriaGastos] = useState([])
+  const [transaccionesRaw, setTransaccionesRaw] = useState([])
+  const [categoriasLista, setCategoriasLista] = useState([])
+  const [editingTx, setEditingTx] = useState(null)
+  const [deletingTx, setDeletingTx] = useState(null)
+  const [editForm, setEditForm] = useState({ monto: '', descripcion: '', categoria_id: '' })
   const [loading, setLoading] = useState(true)
   const [viewType, setViewType] = useState('pie')
 
@@ -27,6 +32,8 @@ export function ReporteMensual() {
         .select(`
           id,
           monto,
+          fecha,
+          descripcion,
           categoria_id,
           categorias:categoria_id (
             id,
@@ -79,6 +86,7 @@ export function ReporteMensual() {
       setIngresos(totalIngresos)
       setGastos(totalGastos)
       setCategoriaGastos(categoriaArray)
+      setTransaccionesRaw(transacciones)
       setLoading(false)
     }
 
@@ -86,6 +94,48 @@ export function ReporteMensual() {
       fetchTransacciones()
     }
   }, [user])
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      const { data } = await supabase.from('categorias').select('*').order('nombre')
+      if (data) setCategoriasLista(data)
+    }
+    fetchCategorias()
+  }, [])
+
+  const handleDeleteClick = (tx) => {
+    setDeletingTx(tx)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingTx) return;
+    const { error } = await supabase.from('transacciones').delete().eq('id', deletingTx.id)
+    if (!error && onSuccess) onSuccess()
+    setDeletingTx(null)
+  }
+
+  const handleEditClick = (tx) => {
+    setEditingTx(tx)
+    setEditForm({
+      monto: tx.monto.toString(),
+      descripcion: tx.descripcion || '',
+      categoria_id: tx.categoria_id
+    })
+  }
+
+  const handleEditSave = async (e) => {
+    e.preventDefault()
+    const { error } = await supabase.from('transacciones').update({
+      monto: parseFloat(editForm.monto),
+      descripcion: editForm.descripcion || null,
+      categoria_id: editForm.categoria_id
+    }).eq('id', editingTx.id)
+    
+    if (!error) {
+      setEditingTx(null)
+      if (onSuccess) onSuccess()
+    }
+  }
 
   if (loading) {
     return (
@@ -175,6 +225,12 @@ export function ReporteMensual() {
           >
             Listado
           </button>
+          <button
+            onClick={() => setViewType('historial')}
+            className={`px-4 py-2 font-medium transition-colors ${viewType === 'historial' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'}`}
+          >
+            Historial
+          </button>
         </div>
 
         {/* Gráficos */}
@@ -252,9 +308,146 @@ export function ReporteMensual() {
                 })}
               </div>
             )}
+
+            {viewType === 'historial' && (
+              <div className="space-y-3">
+                {transaccionesRaw.map((tx) => {
+                  const es_ingreso = tx.categorias.tipo === 'ingreso'
+                  return (
+                    <div key={tx.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 dark:bg-slate-700/30 rounded-lg border border-gray-100 dark:border-slate-700 transition-colors duration-300">
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className={`p-2 rounded-lg ${es_ingreso ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}>
+                          {tx.categorias.icono_opcional || (es_ingreso ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800 dark:text-white capitalize">{tx.descripcion || tx.categorias.nombre}</p>
+                          <p className="text-sm text-gray-500 dark:text-slate-400">
+                            {new Date(tx.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between w-full sm:w-auto mt-3 sm:mt-0 gap-4">
+                        <p className={`font-bold ${es_ingreso ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {es_ingreso ? '+' : '-'}${tx.monto.toFixed(2)}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEditClick(tx)} className="p-2 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDeleteClick(tx)} className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {/* Modal de Edición */}
+      {editingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden dark:border dark:border-slate-700">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">Editar Transacción</h3>
+              <button onClick={() => setEditingTx(null)} className="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSave} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Categoría</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto p-1 custom-scrollbar">
+                  {categoriasLista.map((cat) => {
+                    const isSelected = editForm.categoria_id === cat.id;
+                    const isIngreso = cat.tipo === 'ingreso';
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, categoria_id: cat.id })}
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-xl border text-center transition-all duration-200 ${
+                          isSelected 
+                            ? (isIngreso 
+                                ? 'bg-green-50 border-green-500 text-green-800 dark:bg-green-900/40 dark:border-green-500 dark:text-green-300 ring-2 ring-green-500/20' 
+                                : 'bg-red-50 border-red-500 text-red-800 dark:bg-red-900/40 dark:border-red-500 dark:text-red-300 ring-2 ring-red-500/20')
+                            : 'bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50 dark:bg-slate-700/50 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        <span className="text-2xl">{cat.icono_opcional}</span>
+                        <span className="text-xs font-medium w-full break-words leading-tight">{cat.nombre}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Monto</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.monto}
+                    onChange={(e) => setEditForm({ ...editForm, monto: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700/50 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Descripción</label>
+                  <input
+                    type="text"
+                    value={editForm.descripcion}
+                    onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700/50 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setEditingTx(null)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  Actualizar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {deletingTx && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden dark:border dark:border-slate-700 p-6 text-center transform transition-all">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">¿Eliminar Transacción?</h3>
+            <p className="text-gray-600 dark:text-slate-400 mb-6">
+              Estás a punto de eliminar el registro de <strong>${deletingTx.monto.toFixed(2)}</strong> en la categoría {deletingTx.categorias?.nombre}. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeletingTx(null)} 
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDelete} 
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+              >
+                Sí, Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

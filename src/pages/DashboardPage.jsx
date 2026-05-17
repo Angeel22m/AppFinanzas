@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { IngresosGastosForm } from '../components/IngresosGastosForm'
 import { ReporteMensual } from '../components/ReporteMensual'
-import { LogOut, RefreshCw, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react'
+import { LogOut, RefreshCw, TrendingUp, TrendingDown, PiggyBank, Menu, X } from 'lucide-react'
 
 export function DashboardPage() {
   const { user, signOut, loading: authLoading } = useAuth()
@@ -17,6 +17,7 @@ export function DashboardPage() {
   })
   const [metricsLoading, setMetricsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -94,18 +95,43 @@ export function DashboardPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-300">FinanzasApp</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-600 dark:text-slate-400 transition-colors duration-300">Sesión activa</p>
-              <p className="font-medium text-gray-800 dark:text-slate-200 transition-colors duration-300">{user?.email}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+
+          {/* Menu Container */}
+          <div className="flex items-center relative">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white focus:outline-none p-2 rounded-lg transition-colors"
             >
-              <LogOut className="w-4 h-4" />
-              Salir
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
+
+            {/* Menu Dropdown */}
+            {isMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-2 z-50 transform origin-top-right transition-all">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 mb-2">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-1">Sesión activa</p>
+                  <p className="font-bold text-gray-800 dark:text-white capitalize truncate">{user?.email?.split('@')[0]}</p>
+                </div>
+                
+                <div className="px-2 space-y-1">
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors font-medium text-left"
+                    onClick={() => { setIsMenuOpen(false); /* Aquí conectarás tu futura página de perfil */ }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mi Perfil
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors font-medium text-left"
+                  >
+                    <LogOut className="w-[18px] h-[18px]" />
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -158,25 +184,25 @@ export function DashboardPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - Formulario */}
-          <div className="lg:col-span-1">
-            <IngresosGastosForm onSuccess={handleTransactionSuccess} />
-          </div>
-
-          {/* Main - Reporte */}
-          <div className="lg:col-span-3">
-            <div className="flex gap-2 mb-4">
+        {/* Content Section */}
+        <div className="w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors duration-300">
+              Panel de Control
+            </h2>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={handleTransactionSuccess}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 px-4 py-2 rounded-lg transition-colors duration-200 flex-1 sm:flex-none font-medium shadow-sm"
               >
                 <RefreshCw className="w-4 h-4" />
-                Actualizar Datos
+                Actualizar
               </button>
+              <IngresosGastosForm onSuccess={handleTransactionSuccess} />
             </div>
-            <ReporteMensual key={refreshKey} />
           </div>
+          
+          <ReporteMensual key={refreshKey} onSuccess={handleTransactionSuccess} />
         </div>
       </main>
     </div>
