@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
+  <link rel="shortcut icon" href="/vite.svg" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mi Gestor de Finanzas</title>
-  
+
   <!-- PWA & iOS Meta Tags -->
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,8 +14,17 @@
   <meta name="apple-mobile-web-app-title" content="FinanzasApp">
   <link rel="apple-touch-icon" href="/icon-192x192.png">
 </head>
+
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/AppFinanzas/sw.js')
+        .then(() => console.log('Service Worker Registrado Fino'))
+        .catch(err => console.log('Error al registrar SW', err));
+    }
+  </script>
 </body>
+
 </html>
