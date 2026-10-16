@@ -1,0 +1,117 @@
+.budget-shell {
+  --glass: rgba(255, 255, 255, .68);
+  --glass-edge: rgba(255, 255, 255, .85);
+  --glass-shadow: 0 12px 40px -20px rgba(45, 61, 103, .2);
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 8% 5%, #cddffb 0, transparent 46%),
+    radial-gradient(ellipse at 95% 32%, #e2d8f8 0, transparent 42%),
+    radial-gradient(ellipse at 10% 90%, #daf1ee 0, transparent 40%),
+    #f1f3f8;
+  background-attachment: fixed;
+  padding: 22px 16px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: background-color .2s, color .2s;
+}
+
+.dark .budget-shell {
+  --glass: rgba(26, 31, 47, .76);
+  --glass-edge: rgba(255, 255, 255, .12);
+  --glass-shadow: 0 14px 44px -20px rgba(0, 0, 0, .6);
+  background:
+    radial-gradient(ellipse at 0% 0%, #182d4d 0, transparent 45%),
+    radial-gradient(ellipse at 100% 32%, #2a2144 0, transparent 46%),
+    radial-gradient(ellipse at 5% 90%, #132e34 0, transparent 40%),
+    #0c101b;
+  background-attachment: fixed;
+}
+
+.budget-shell .glass-panel {
+  border: 1px solid var(--glass-edge);
+  border-radius: 26px;
+  background: var(--glass);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, .35);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+  backdrop-filter: blur(24px) saturate(165%);
+}
+
+.budget-header {
+  position: sticky;
+  top: 14px;
+  z-index: 40;
+}
+
+.budget-brand {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #519cff, #2563eb);
+  box-shadow: 0 5px 14px #2563eb33, inset 0 1px 1px #ffffff80;
+  color: white;
+}
+
+.budget-toolbar { padding: 0 8px; }
+.budget-toolbar select { border-radius: 14px; }
+.budget-edit-income { display: inline-flex; align-items: center; gap: 7px; }
+.budget-shell .budget-balance {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #ffffffc9, #eef5ff8c);
+}
+.dark .budget-shell .budget-balance {
+  background: linear-gradient(120deg, #253955b8, #202539a6);
+}
+.budget-balance::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  top: -85px;
+  right: -35px;
+  border-radius: 50%;
+  border: 22px solid #8ebcf52b;
+  pointer-events: none;
+}
+.budget-amount { font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+.budget-fold { padding: 20px 23px; margin-top: 14px; }
+.budget-fold > summary { min-height: 24px; }
+.budget-fold > summary::-webkit-details-marker { display: none; }
+.budget-fold > summary > svg { transition: transform .18s; }
+.budget-row:last-of-type { border-bottom: 0; }
+.budget-shell button, .budget-shell a { transition: background-color .15s, transform .15s; }
+.budget-shell button:not(:disabled):active { transform: scale(.97); }
+.budget-icon { min-width: 34px; min-height: 36px; }
+.budget-shell input, .budget-shell select { min-height: 44px; }
+.budget-shell :is(button, a, summary):focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 3px;
+}
+.budget-shell .budget-modal {
+  --glass: rgba(249, 251, 255, .94);
+  box-shadow: 0 30px 100px #0004, inset 0 1px 0 #ffffff80;
+}
+.dark .budget-shell .budget-modal { --glass: rgba(24, 30, 45, .96); }
+
+@media (max-width: 480px) {
+  .budget-shell { padding: 12px 10px 0; }
+  .budget-header { top: 8px; padding: 12px; gap: 6px; }
+  .budget-brand { width: 32px; height: 32px; border-radius: 11px; }
+  .budget-header > div { gap: 5px; }
+  .budget-header a { padding: 8px 4px; font-size: 12px; }
+  .budget-header > div:first-child > span:last-child { font-size: 14px; }
+  .budget-fold { padding: 18px 14px; border-radius: 22px; }
+  .budget-row { flex-wrap: wrap; }
+  .budget-row > div:first-child { min-width: 90px; }
+  .budget-row > div:last-child { margin-left: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-shell, .budget-shell * { transition: none !important; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .budget-shell .glass-panel { background: #f8faff; }
+  .dark .budget-shell .glass-panel { background: #1b2233; }
+}

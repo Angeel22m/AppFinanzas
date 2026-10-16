@@ -23,25 +23,24 @@ CREATE TABLE public.meses_financieros (
  ingreso numeric(12,2) NOT NULL CHECK (ingreso >= 0 AND ingreso < 1000000000),
  UNIQUE(user_id, mes), UNIQUE(id, user_id)
 );
--- Asignar dinero a una secciÃ³n no lo descuenta del total; gastarlo sÃ­.
+-- Cada seccion es directamente un gasto fijo mensual.
 CREATE TABLE public.secciones_presupuesto (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  user_id uuid NOT NULL DEFAULT auth.uid(), mes_id uuid NOT NULL,
  nombre text NOT NULL CHECK (length(trim(nombre)) BETWEEN 1 AND 100),
- asignado numeric(12,2) NOT NULL DEFAULT 0 CHECK (asignado >= 0 AND asignado < 1000000000),
+ monto numeric(12,2) NOT NULL DEFAULT 0 CHECK (monto >= 0 AND monto < 1000000000),
+ monto_recurrente numeric(12,2) NOT NULL DEFAULT 0 CHECK (monto_recurrente >= 0 AND monto_recurrente < 1000000000),
  FOREIGN KEY(mes_id, user_id) REFERENCES public.meses_financieros(id, user_id) ON DELETE CASCADE,
  UNIQUE(id, mes_id, user_id)
 );
+-- Los gastos adicionales pertenecen al mes, sin depender de una seccion.
 CREATE TABLE public.gastos_presupuesto (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
- user_id uuid NOT NULL DEFAULT auth.uid(), mes_id uuid NOT NULL, seccion_id uuid NOT NULL,
+ user_id uuid NOT NULL DEFAULT auth.uid(), mes_id uuid NOT NULL,
  nombre text NOT NULL CHECK (length(trim(nombre)) BETWEEN 1 AND 100),
- monto numeric(12,2) NOT NULL CHECK (monto >= 0 AND monto < 1000000000),
- monto_recurrente numeric(12,2) NOT NULL DEFAULT 0 CHECK (monto_recurrente >= 0 AND monto_recurrente < 1000000000),
- tipo text NOT NULL CHECK (tipo IN ('fijo', 'extra')),
- CHECK (tipo = 'fijo' OR (monto > 0 AND monto_recurrente = 0)),
+ monto numeric(12,2) NOT NULL CHECK (monto > 0 AND monto < 1000000000),
  created_at timestamptz NOT NULL DEFAULT now(),
- FOREIGN KEY(seccion_id, mes_id, user_id) REFERENCES public.secciones_presupuesto(id, mes_id, user_id) ON DELETE CASCADE
+ FOREIGN KEY(mes_id, user_id) REFERENCES public.meses_financieros(id, user_id) ON DELETE CASCADE
 );
 CREATE INDEX gastos_presupuesto_mes ON public.gastos_presupuesto(user_id, mes_id);
 CREATE INDEX secciones_presupuesto_mes ON public.secciones_presupuesto(user_id, mes_id);
@@ -69,9 +68,9 @@ DECLARE
  usuario uuid := auth.uid();
  actual date := date_trunc('month', timezone('America/Guatemala', now()))::date;
  anterior public.meses_financieros%ROWTYPE;
- nuevo uuid; nueva_seccion uuid; seccion record; ingreso_base numeric;
+ nuevo uuid; ingreso_base numeric;
 BEGIN
- IF usuario IS NULL THEN RAISE EXCEPTION 'Debes iniciar sesiÃ³n'; END IF;
+ IF usuario IS NULL THEN RAISE EXCEPTION 'Debes iniciar sesión'; END IF;
  PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(usuario::text, 0));
  SELECT ingreso_mensual INTO ingreso_base FROM public.configuracion_financiera WHERE user_id = usuario;
  IF NOT FOUND THEN RETURN NULL; END IF;
@@ -82,11 +81,9 @@ BEGIN
  END IF;
  WHILE anterior.mes < actual LOOP
   INSERT INTO public.meses_financieros(user_id,mes,ingreso) VALUES(usuario,(anterior.mes + interval '1 month')::date,ingreso_base) RETURNING id INTO nuevo;
-  FOR seccion IN SELECT * FROM public.secciones_presupuesto WHERE mes_id = anterior.id AND user_id = usuario LOOP
-   INSERT INTO public.secciones_presupuesto(user_id,mes_id,nombre,asignado) VALUES(usuario,nuevo,seccion.nombre,seccion.asignado) RETURNING id INTO nueva_seccion;
-   INSERT INTO public.gastos_presupuesto(user_id,mes_id,seccion_id,nombre,monto,monto_recurrente,tipo)
-    SELECT usuario,nuevo,nueva_seccion,nombre,monto_recurrente,monto_recurrente,'fijo' FROM public.gastos_presupuesto WHERE seccion_id = seccion.id AND user_id = usuario AND tipo = 'fijo' AND monto_recurrente > 0;
-  END LOOP;
+  INSERT INTO public.secciones_presupuesto(user_id,mes_id,nombre,monto,monto_recurrente)
+   SELECT usuario,nuevo,nombre,monto_recurrente,monto_recurrente
+   FROM public.secciones_presupuesto WHERE mes_id = anterior.id AND user_id = usuario AND monto_recurrente > 0;
   SELECT * INTO anterior FROM public.meses_financieros WHERE id = nuevo;
  END LOOP;
  RETURN anterior.id;
@@ -97,12 +94,12 @@ CREATE FUNCTION public.configurar_finanzas(p_ingreso numeric, p_capital numeric 
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE usuario uuid := auth.uid(); actual_id uuid;
 BEGIN
- IF usuario IS NULL THEN RAISE EXCEPTION 'Debes iniciar sesiÃ³n'; END IF;
+ IF usuario IS NULL THEN RAISE EXCEPTION 'Debes iniciar sesión'; END IF;
  IF p_ingreso IS NULL OR p_capital IS NULL OR p_ingreso < 0 OR p_capital < 0 OR p_ingreso >= 1000000000 OR p_capital >= 1000000000 OR p_ingreso <> round(p_ingreso,2) OR p_capital <> round(p_capital,2) THEN
-  RAISE EXCEPTION 'Importes invÃ¡lidos: usa valores positivos o cero con dos decimales';
+  RAISE EXCEPTION 'Importes inválidos: usa valores positivos o cero con dos decimales';
  END IF;
  PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(usuario::text, 0));
- -- Abre los meses faltantes con la configuraciÃ³n anterior antes de cambiarla.
+ -- Abre los meses faltantes con el ingreso anterior antes de cambiarlo.
  actual_id := public.abrir_mes_financiero();
  INSERT INTO public.configuracion_financiera(user_id,ingreso_mensual,capital_inicial) VALUES(usuario,p_ingreso,p_capital)
  ON CONFLICT(user_id) DO UPDATE SET ingreso_mensual = excluded.ingreso_mensual;

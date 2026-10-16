@@ -9,7 +9,11 @@ import { Sun, Moon, AlertCircle, X } from 'lucide-react'
 
 function App() {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'light'
+    try {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'light' || saved === 'dark') return saved
+    } catch {}
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [authErrorAlert, setAuthErrorAlert] = useState(false)
 
@@ -29,7 +33,8 @@ function App() {
     } else {
       document.documentElement.classList.remove('dark')
     }
-    localStorage.setItem('theme', theme)
+    document.documentElement.style.colorScheme = theme
+    try { localStorage.setItem('theme', theme) } catch {}
   }, [theme])
 
   const toggleTheme = () => {
@@ -65,8 +70,9 @@ function App() {
 
         <button
           onClick={toggleTheme}
-          className="fixed bottom-4 right-4 p-3 bg-white dark:bg-slate-800 rounded-full shadow-lg border border-gray-200 dark:border-slate-700 z-50 transition-colors duration-200 hover:scale-105"
-          aria-label="Toggle Dark Mode"
+          className="fixed bottom-4 right-4 p-3 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-full shadow-lg border border-white/80 dark:border-white/15 z-50 transition-colors duration-200 hover:scale-105 focus-visible:outline-blue-500"
+          aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+          title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
         >
           {theme === 'dark' ? (
             <Sun className="w-6 h-6 text-yellow-500" />

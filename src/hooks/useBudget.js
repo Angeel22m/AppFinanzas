@@ -3,9 +3,15 @@ import { supabase } from '../lib/supabase'
 
 async function readAll(table, userId) {
   const rows = []
+  const columns = table === 'secciones_presupuesto' ? 'id,user_id,mes_id,nombre,monto,monto_recurrente' : '*'
   for (let start = 0; ; start += 500) {
-    const { data, error } = await supabase.from(table).select('*').eq('user_id', userId).order('id').range(start, start + 499)
-    if (error) throw error
+    const { data, error } = await supabase.from(table).select(columns).eq('user_id', userId).order('id').range(start, start + 499)
+    if (error) {
+      if (table === 'secciones_presupuesto' && ['42703', 'PGRST204'].includes(error.code)) {
+        throw new Error('Tu base todavía usa las secciones anteriores. Aplica la actualización de secciones para conservar tus datos y usar el nuevo cálculo.')
+      }
+      throw error
+    }
     rows.push(...data)
     if (data.length < 500) return rows
   }
