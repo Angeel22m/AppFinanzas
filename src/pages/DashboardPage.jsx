@@ -4,7 +4,7 @@ import { ChevronDown, Plus, Pencil, Trash2, Repeat2, LogOut, RefreshCw, X, Walle
 import { useAuth } from '../hooks/useAuth'
 import { useBudget } from '../hooks/useBudget'
 import { supabase } from '../lib/supabase'
-import { money, monthLabel, summarizeMonths, toCents } from '../lib/budget'
+import { money as formatMoney, currencies, monthLabel, summarizeMonths, toCents } from '../lib/budget'
 import '../styles/budget.css'
 
 const inputClass = 'w-full rounded-lg border border-slate-300/60 dark:border-white/20 bg-white/60 dark:bg-zinc-900/60 px-3 py-2.5 text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
@@ -44,6 +44,7 @@ function BudgetNotebook({ user }) {
   const { signOut } = useAuth()
   const budget = useBudget(user.id)
   const { config, months, sections, expenses, currentId, loading, busy, error, notice, mutate } = budget
+  const money = value => formatMoney(value, config?.moneda || 'HNL', config?.formato_moneda || 'simbolo')
   const [selectedId, setSelectedId] = useState('')
   const [form, setForm] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -55,14 +56,14 @@ function BudgetNotebook({ user }) {
   const currentExpenses = expenses.filter(expense => expense.mes_id === selected?.id)
   const available = selected ? (toCents(selected.opening) + toCents(selected.ingreso)) / 100 : 0
   const change = (key, value) => setForm(previous => ({ ...previous, [key]: value }))
-  const openConfig = () => setForm({ kind: 'config', income: config?.ingreso_mensual ?? '', capital: '' })
+  const openConfig = () => setForm({ kind: 'config', income: config?.ingreso_mensual ?? '', capital: '', currency: config?.moneda || 'HNL', display: config?.formato_moneda || 'simbolo' })
   const closeForm = () => { if (!busy) setForm(null) }
 
   const submit = async event => {
     event.preventDefault()
     let operation
     if (form.kind === 'config') {
-      operation = () => supabase.rpc('configurar_finanzas', { p_ingreso: Number(form.income), p_capital: Number(form.capital || 0) })
+      operation = () => supabase.rpc('configurar_presupuesto', { p_ingreso: Number(form.income), p_capital: Number(form.capital || 0), p_moneda: form.currency, p_formato: form.display })
     } else if (form.kind === 'recurrence') {
       operation = () => supabase.from('secciones_presupuesto')
         .update({ monto_recurrente: Number(form.amount) }).eq('id', form.id).eq('user_id', user.id).select().single()
@@ -86,7 +87,7 @@ function BudgetNotebook({ user }) {
     if (saved) setDeleteTarget(null)
   }
   const logout = async () => { try { await signOut() } catch (err) { setSessionError(err.message) } }
-  const formTitle = form?.kind === 'config' ? 'Mi ingreso mensual'
+  const formTitle = form?.kind === 'config' ? 'Ingreso y moneda'
     : form?.kind === 'recurrence' ? 'Importe habitual'
     : form?.kind === 'section' ? (form.id ? 'Editar fijo de este mes' : 'Crear sección de gasto fijo')
     : form?.id ? 'Editar gasto adicional' : 'Reportar gasto adicional'
@@ -117,7 +118,7 @@ function BudgetNotebook({ user }) {
                   {[...history].reverse().map(month => <option key={month.id} value={month.id}>{monthLabel(month.mes)}</option>)}
                 </select>
               </Field>
-              {editable && <button className={`${actionClass} budget-edit-income`} disabled={busy} onClick={openConfig}><Pencil size={14} />Ingreso mensual</button>}
+              {editable && <button className={`${actionClass} budget-edit-income`} disabled={busy} onClick={openConfig}><Pencil size={14} />Configurar</button>}
             </div>
             {!editable && <p className="mt-4 text-xs text-slate-500 dark:text-zinc-400">Solo lectura</p>}
             <section className="budget-balance glass-panel my-6 p-7 sm:p-9" aria-label="Saldo disponible">
@@ -182,6 +183,19 @@ function BudgetNotebook({ user }) {
           <div className="mb-5 flex items-center justify-between gap-2"><h2 id="budget-form-title" className="text-xl font-semibold">{formTitle}</h2><IconButton label="Cerrar formulario" disabled={busy} onClick={closeForm}><X size={18} /></IconButton></div>
           <form className="space-y-5" onSubmit={submit}>
             {form.kind === 'config' ? <>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Moneda">
+                  <select className={inputClass} value={form.currency} onChange={e => change('currency', e.target.value)}>
+                    {currencies.map(item => <option key={item.code} value={item.code}>{item.name} ({item.code})</option>)}
+                  </select>
+                </Field>
+                <Field label="Mostrar como">
+                  <select className={inputClass} value={form.display} onChange={e => change('display', e.target.value)}>
+                    <option value="simbolo">Símbolo</option><option value="codigo">Código</option>
+                  </select>
+                </Field>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">{formatMoney(Number(form.income || 0), form.currency, form.display)} · Sin conversión.</p>
               <NumberField label="Ingreso total de cada mes" value={form.income} onChange={value => change('income', value)} />
               {!config && <NumberField label="Ahorro o capital anterior (opcional)" value={form.capital || 0} onChange={value => change('capital', value)} />}
               <p className="text-xs text-slate-500 dark:text-zinc-400">{config ? 'Desde este mes.' : 'Se suma cada mes.'}</p>

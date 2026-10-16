@@ -14,7 +14,7 @@ App React + Vite + Tailwind + Supabase para distribuir un ingreso mensual en sec
 
 Cada sección tiene dos importes: el gasto real del mes y el habitual. El lápiz cambia únicamente el mes actual; el botón de repetición cambia el habitual para los próximos meses. Si comida suele ser 4,000 y este mes gastaste 3,500, el sobrante aumenta 500 y el próximo mes vuelve a prever 4,000. Puedes poner el gasto actual en cero. Para dejar de repetir un fijo, pon su importe habitual en cero.
 
-Los meses anteriores son de solo lectura. Cambiar el ingreso afecta al mes actual y a los siguientes. Los importes se muestran en USD.
+Los meses anteriores son de solo lectura. Cambiar el ingreso afecta al mes actual y a los siguientes. En Configurar puedes elegir moneda y mostrar símbolo o código. La opción inicial es HNL (L), y la preferencia se guarda por usuario en Supabase. Cambiarla solo modifica la presentación, sin convertir importes. Si ya aplicaste la migración de secciones anterior a este cambio, ejecuta SUPABASE_MONEDA.sql; no borra datos. Los scripts de instalación y de simplificación actualizados también incluyen estas columnas y la función configurar_presupuesto.
 
 ## Instalar y configurar
 

@@ -1,5 +1,19 @@
 ﻿export const toCents = value => Math.round(Number(value) * 100)
-export const money = value => new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'USD' }).format(value)
+export const currencies = [
+  { code: 'HNL', symbol: 'L', name: 'Lempiras' },
+  { code: 'USD', symbol: '$', name: 'Dólares' },
+  { code: 'GTQ', symbol: 'Q', name: 'Quetzales' },
+  { code: 'EUR', symbol: '€', name: 'Euros' },
+  { code: 'MXN', symbol: 'MX$', name: 'Pesos mexicanos' },
+  { code: 'CRC', symbol: '₡', name: 'Colones' },
+  { code: 'NIO', symbol: 'C$', name: 'Córdobas' },
+]
+const numberFormat = new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+export function money(value, code = 'HNL', display = 'simbolo') {
+  const currency = currencies.find(item => item.code === code) || currencies[0]
+  const amount = Number(value)
+  return `${amount < 0 ? '−' : ''}${display === 'codigo' ? currency.code : currency.symbol} ${numberFormat.format(Math.abs(amount))}`
+}
 export const monthLabel = date => new Intl.DateTimeFormat('es-GT', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`))
 
 // No se guardan saldos derivados: se recalculan a partir de los meses y gastos.

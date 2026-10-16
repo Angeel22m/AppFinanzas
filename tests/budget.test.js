@@ -1,6 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { summarizeMonths } from '../src/lib/budget.js'
+import { money, summarizeMonths } from '../src/lib/budget.js'
+
+test('muestra lempiras o la moneda elegida sin convertir el importe', () => {
+  assert.equal(money(22000), 'L 22,000.00')
+  assert.equal(money(22000, 'USD'), '$ 22,000.00')
+  assert.equal(money(22000, 'HNL', 'codigo'), 'HNL 22,000.00')
+  assert.equal(money(-25.5, 'GTQ'), '−Q 25.50')
+})
 
 const months = [
   { id: 'oct', mes: '2026-10-01', ingreso: 10000 },

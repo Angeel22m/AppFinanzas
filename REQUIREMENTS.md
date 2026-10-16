@@ -8,7 +8,7 @@
 - Sobrante positivo o negativo acumulado de forma cronológica.
 - Historial mensual de solo lectura.
 - Cada sección representa directamente un gasto fijo; los extras se registran aparte.
-- Moneda visual USD, importes con dos decimales y cálculos en centavos enteros.
+- Moneda y formato visual configurables por usuario, con HNL (L) inicial, dos decimales y cálculos en centavos enteros. Cambiar la visualización no convierte importes.
 - Mes calendario según America/Guatemala, materializado al entrar o actualizar la app.
 - Persistencia en Supabase; no se utiliza el presupuesto local anterior.
 

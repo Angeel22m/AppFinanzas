@@ -20,3 +20,5 @@ Las claves foráneas compuestas impiden vincular gastos o secciones a meses de o
 El cliente conserva la autenticación y el perfil existentes. El nuevo panel sustituye los informes basados en las antiguas tablas; los componentes anteriores de transacciones no forman parte de las rutas activas.
 
 La migración SUPABASE_SIMPLIFICAR_SECCIONES.sql convierte el modelo anterior sin reiniciar cuentas ni meses. Consolida los fijos internos en su sección, separa los extras y preserva el saldo de los meses históricos. El diseño glass y sus variantes de tema están en src/styles/budget.css.
+
+La configuración incluye moneda y formato_moneda por usuario. La función configurar_presupuesto actualiza ingreso y formato en una sola transacción; el cliente nunca escribe directamente en la tabla de configuración. SUPABASE_MONEDA.sql añade esta preferencia de forma repetible sin reiniciar datos. El formato de moneda es visual y no altera cálculos ni convierte cantidades.
