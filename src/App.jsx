@@ -75,6 +75,7 @@ function App() {
           )}
         </button>
         <Routes>
+          <Route path="/libreta" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<AuthPage />} />
           
           <Route
